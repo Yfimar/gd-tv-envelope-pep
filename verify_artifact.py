@@ -45,7 +45,7 @@ def weights(h):
 
 
 # ---------- interpolation matrices over basis [x_0, g_0..g_N] ----------
-from cert_design import interp_matrices as _raw_M
+from pep_sdp import interp_matrices as _raw_M
 
 
 def _Mparts(h):

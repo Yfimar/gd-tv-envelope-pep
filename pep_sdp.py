@@ -87,3 +87,39 @@ if __name__ == "__main__":
     for N in [1, 2, 3, 5, 10]:
         h = [1.0] * N
         print(f"N={N:2d}  const h=1:  fN = {solve_pep_fast(h):.8f}")
+
+
+def interp_matrices(h):
+    """Return dict (i,j)->M for all ordered pairs i!=j over nodes 0..N,-1(star).
+
+    I_ij = f_i - f_j - <g_j, x_i - x_j> - 1/2||g_i - g_j||^2.
+    Returns only the Gram (matrix) part as (m,m) symmetric arrays.
+    """
+    N = len(h)
+    m = N + 2
+    # coefficient vectors of x_t in basis: x_t = x_0 - sum_{s<t} h_s g_s
+    cx = [None] * (N + 1)
+    v = np.zeros(m); v[0] = 1.0
+    for t in range(N + 1):
+        cx[t] = v.copy()
+        e = np.zeros(m); e[t + 1] = 1.0
+        if t < N:
+            v = v - h[t] * e
+    eg = [None] * (N + 1)
+    for t in range(N + 1):
+        e = np.zeros(m); e[t + 1] = 1.0
+        eg[t] = e
+    zero = np.zeros(m)
+
+    def M_of(i, j):
+        # -<g_j, x_i - x_j> - 1/2||g_i - g_j||^2 as sym matrix
+        cxi = cx[i] if i != -1 else zero
+        cxj = cx[j] if j != -1 else zero
+        cgi = eg[i] if i != -1 else zero
+        cgj = eg[j] if j != -1 else zero
+        dx = cxi - cxj
+        dg = cgi - cgj
+        M = -0.5 * (np.outer(cgj, dx) + np.outer(dx, cgj)) - 0.5 * np.outer(dg, dg)
+        return M
+
+    return M_of
